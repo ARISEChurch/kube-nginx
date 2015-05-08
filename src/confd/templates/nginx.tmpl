@@ -98,7 +98,7 @@ http {
 			proxy_set_header Connection "upgrade";
 			{{ end }}
 
-			proxy_pass http://{{$data.spec.portalIP}}:{{$data.port}};
+			proxy_pass http://{{$data.spec.nportalIP}}:{{(index $data.spec.ports 0).port}};
 		}
 		{{ end }}
 
