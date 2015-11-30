@@ -57,25 +57,32 @@ metadata:
 **nginx/host** = This is the hostname that nginx will match against to proxy to
 your service
 
-**nginx/websocket** =  1 | 0  [default 0] This enables websocket support in nginx, it adds to nginx :
+**nginx/path** = This annotation will make nginx listen on a path using
+`location /path {}`.
+
+**nginx/websocket** =  1 | 0  [default 0] This enables websocket support in nginx, it adds to nginx:
 ```
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
+	proxy_http_version 1.1;
+	proxy_set_header Upgrade $http_upgrade;
+	proxy_set_header Connection "upgrade";
 ```
 
+**nginx/sessionAffinity** = 1 | 0 [default 0] This enables nginx `ip_hash`
+option.
+
 **nginx/sslCrt** = The SSL certificate file for this service (must be located in /etc/nginx/ssl)
+
 **nginx/sslKey** = The SSL private key file for this service (must be located in /etc/nginx/ssl)
 
 The ssl properties add to the nginx config:
 
 ```
-								ssl_certificate           /etc/nginx/ssl/cert.crt;
-								ssl_certificate_key       /etc/nginx/ssl/key.key;
+	ssl_certificate           /etc/nginx/ssl/cert.crt;
+	ssl_certificate_key       /etc/nginx/ssl/key.key;
 
-								ssl on;
-								ssl_session_cache  builtin:1000  shared:SSL:10m;
-								ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
-								ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
-								ssl_prefer_server_ciphers on;
+	ssl on;
+	ssl_session_cache  builtin:1000  shared:SSL:10m;
+	ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+	ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
+	ssl_prefer_server_ciphers on;
 ```
