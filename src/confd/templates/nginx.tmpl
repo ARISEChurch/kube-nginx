@@ -79,7 +79,7 @@ http {
 		ssl_prefer_server_ciphers on;
 		{{ end }}
 
-		location / {
+		{{if $path}}location /{{$path}}{{else}}location /{{end}} {
 			proxy_set_header X-Real-IP $remote_addr;
 			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 			proxy_set_header Host $http_host;
@@ -97,7 +97,7 @@ http {
 			proxy_set_header Connection "upgrade";
 			{{ end }}
 
-			proxy_pass http://{{$upstreamKey}};
+			proxy_pass http://{{$upstreamKey}}/;
 		}
 	}{{ end }}{{ end }}{{ end }}{{ end }}{{ end }}
 }
