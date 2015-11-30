@@ -1,4 +1,4 @@
-kubernetes-reverseproxy Docker file
+kube-nginx Docker file
 =======================
 
 
@@ -19,14 +19,14 @@ This docker image (Dockerfile) uses [nginx](http://nginx.org/) as reverse proxy 
 
 1. Install [Docker](https://www.docker.com/).
 
-2. Download [automated build](https://registry.hub.docker.com/u/arisechurch/kubernetes-reverseproxy/) from public [Docker Hub Registry](https://registry.hub.docker.com/):
+2. Download [automated build](https://registry.hub.docker.com/u/arisechurch/kube-nginx/) from public [Docker Hub Registry](https://registry.hub.docker.com/):
 
-	```docker pull arisechurch/kubernetes-reverseproxy```
+	```docker pull arisechurch/kube-nginx```
 
 
 ### Usage
 
-    docker run -d -e CONFD_ETCD_NODE=<ETCD-IP>:<ETCD-PORT> -t -p 80:80 arisechurch/kubernetes-reverseproxy
+    docker run -d -e CONFD_ETCD_NODE=<ETCD-IP>:<ETCD-PORT> -t -p 80:80 arisechurch/kube-nginx
 
 **ETCD-IP** = IP/hostname of the etcd server, this is the IP that is accessible from wihtin the container
 
@@ -34,7 +34,7 @@ This docker image (Dockerfile) uses [nginx](http://nginx.org/) as reverse proxy 
 
 Example:
 
-	docker run -d -e CONFD_ETCD_NODE=172.17.8.101:4001 -t -p 80:80 arisechurch/kubernetes-reverseproxy
+	docker run -d -e CONFD_ETCD_NODE=172.17.8.101:4001 -t -p 80:80 arisechurch/kube-nginx
 
 #### Configure kubernetes service
 
