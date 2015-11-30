@@ -47,7 +47,7 @@ It will use the first `port` listed in your service configuration.
 metadata:
   name: myservice
   labels:
-    nginx/type: external
+    nginx/type: http
   annotations:
     nginx/host: some.host.com
 ```

@@ -44,7 +44,7 @@ http {
 	{{range $spec := getvs "/registry/services/specs/*/*"}}
 	{{$data := json $spec}}
 	{{$type := index $data.metadata.labels "nginx/type"}}
-	{{if $type}}{{if eq $type "external"}}
+	{{if $type}}{{if eq $type "http"}}
 	{{$host := (index $data.metadata.annotations "nginx/host") }}
 	{{$path := (index $data.metadata.annotations "nginx/path") }}
 	{{$websocket := (index $data.metadata.annotations "nginx/websocket") }}
