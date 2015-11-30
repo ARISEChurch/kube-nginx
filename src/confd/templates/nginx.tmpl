@@ -62,8 +62,14 @@ http {
 		{{end}}{{end}}
 	}
 
-	server {
+	{{if $sslCrt}}server {
 		listen 80;
+		server_name {{$host}};
+		return 301 https://$server_name$request_uri;
+	}{{end}}
+
+	server {
+		{{if $sslCrt}}listen 443 ssl;{{else}}listen 80;{{end}}
 		server_name {{$host}};
 
 		{{if $sslCrt}}
