@@ -1,39 +1,23 @@
 #
 # Reverse proxy for kubernetes
 #
-FROM ubuntu:latest
+FROM smebberson/alpine-nginx:latest
 
-ENV DEBIAN_FRONTEND noninteractive
-
-EXPOSE 80 443
-
-# Run the boot script
-CMD /opt/boot.sh
+ADD https://github.com/kelseyhightower/confd/releases/download/v0.10.0/confd-0.10.0-linux-amd64 /usr/local/bin/confd
 
 ####
 
-# Prepare requirements 
-RUN apt-get update -qy && \
-    apt-get install --no-install-recommends -qy software-properties-common
-
-# Install Nginx.
-RUN add-apt-repository -y ppa:nginx/stable && \
-    apt-get update -q && \
-    apt-get install --no-install-recommends -qy nginx && \
-    chown -R www-data:www-data /var/lib/nginx && \
-    rm -f /etc/nginx/sites-available/default
-
-ADD https://github.com/kelseyhightower/confd/releases/download/v0.6.3/confd-0.6.3-linux-amd64 /usr/local/bin/confd
-
-####
-
-ADD ./src/boot.sh /opt/boot.sh
-RUN chmod +x /opt/boot.sh
-
-# setup confd
-RUN chmod u+x /usr/local/bin/confd && \
-	mkdir -p /etc/confd/conf.d && \
-	mkdir -p /etc/confd/templates
+ADD ./src/nginx.sh /etc/services.d/nginx/run
+ADD ./src/confd.sh /etc/services.d/confd/run
+RUN chmod +x /etc/services.d/nginx/run && \
+    chmod +x /etc/services.d/confd/run && \
+    # setup confd
+    chmod u+x /usr/local/bin/confd && \
+    mkdir -p /etc/confd/conf.d && \
+    mkdir -p /etc/confd/templates && \
+    # send logs to stdout and stderr
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 ADD ./src/confd/conf.d/myconfig.toml /etc/confd/conf.d/myconfig.toml
 ADD ./src/confd/templates/nginx.tmpl /etc/confd/templates/nginx.tmpl
