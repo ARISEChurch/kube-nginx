@@ -48,6 +48,7 @@ http {
 	{{$host := (index $data.metadata.annotations "nginx/host") }}
 	{{$path := (index $data.metadata.annotations "nginx/path") }}
 	{{$websocket := (index $data.metadata.annotations "nginx/websocket") }}
+	{{$affinity := (index $data.metadata.annotations "nginx/affinity") }}
 	{{$sslCrt := (index $data.metadata.annotations "nginx/sslCrt") }}
 	{{$sslKey := (index $data.metadata.annotations "nginx/sslKey") }}
 	{{$endpointsDir := printf "/registry/services/endpoints/%s/%s" $data.metadata.namespace $data.metadata.name}}
@@ -56,12 +57,9 @@ http {
 	{{if and $host $endpoints.subsets }}
 	{{$upstreamKey := printf "backend-%s-%s" $data.metadata.namespace $data.metadata.name}}
 	upstream {{$upstreamKey}} {
-		{{range $endpoint := $endpoints.subsets}}
-		{{$port := (index $endpoint.ports 0)}}
-		{{range $address := $endpoint.addresses}}
+		{{if $affinity}}ip_hash;{{end}}{{range $endpoint := $endpoints.subsets}}{{$port := (index $endpoint.ports 0)}}{{range $address := $endpoint.addresses}}
 		server {{$address.ip}}:{{$port.port}};
-		{{end}}
-		{{end}}
+		{{end}}{{end}}
 	}
 
 	server {
