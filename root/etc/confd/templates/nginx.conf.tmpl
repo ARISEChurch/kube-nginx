@@ -1,0 +1,100 @@
+user nginx;
+worker_processes auto;
+worker_rlimit_nofile 100000;
+
+pid /run/nginx.pid;
+
+events {
+	worker_connections 10000;
+	use epoll;
+	multi_accept on;
+}
+
+http {
+	##
+	# Basic Settings
+	##
+	sendfile on;
+	tcp_nopush on;
+	tcp_nodelay on;
+	keepalive_requests 20000;
+	keepalive_timeout 65;
+	types_hash_max_size 2048;
+
+	include /etc/nginx/mime.types;
+	default_type application/octet-stream;
+
+	##
+	# Logging Settings
+	##
+	access_log off;
+	error_log /var/log/nginx/error.log;
+
+	##
+	# Gzip Settings
+	##
+	gzip on;
+	gzip_disable "msie6";
+
+{{range $spec := getvs "/registry/services/specs/*/*"}}
+{{$data := json $spec}}
+{{$type := index $data.metadata.labels "nginx/type"}}
+{{if $type}}{{if eq $type "http"}}
+{{$host := (index $data.metadata.annotations "nginx/host") }}
+{{$path := (index $data.metadata.annotations "nginx/path") }}
+{{$websocket := (index $data.metadata.annotations "nginx/websocket") }}
+{{$sessionAffinity := (index $data.metadata.annotations "nginx/sessionAffinity") }}
+{{$sslCrt := (index $data.metadata.annotations "nginx/sslCrt") }}
+{{$sslKey := (index $data.metadata.annotations "nginx/sslKey") }}
+{{$endpointsDir := printf "/registry/services/endpoints/%s/%s" $data.metadata.namespace $data.metadata.name}}
+{{if exists $endpointsDir}}
+{{$endpoints := json (getv $endpointsDir)}}
+{{if and $host $endpoints.subsets }}
+{{$upstreamKey := printf "backend-%s-%s" $data.metadata.namespace $data.metadata.name}}
+	upstream {{$upstreamKey}} {
+{{if $sessionAffinity}}
+		{{if eq $sessionAffinity "ip"}}ip_hash;{{end}}
+		{{if eq $sessionAffinity "cookie"}}sticky;{{end}}
+{{end}}
+{{range $endpoint := $endpoints.subsets}}
+{{$port := (index $endpoint.ports 0)}}
+		{{range $address := $endpoint.addresses}}server {{$address.ip}}:{{$port.port}};
+{{end}}{{end}}
+	}
+
+	{{if $sslCrt}}server {
+		listen 80;
+		server_name {{$host}};
+		return 301 https://$server_name$request_uri;
+	}{{end}}
+
+	server {
+		{{if $sslCrt}}listen 443 ssl http2;{{else}}listen 80;{{end}}
+		server_name {{$host}};
+
+		{{if $sslCrt}}ssl_certificate /etc/nginx/ssl/{{$sslCrt}};
+		ssl_certificate_key /etc/nginx/ssl/{{$sslKey}};
+
+		ssl on;
+		ssl_session_cache  builtin:1000  shared:SSL:10m;
+		ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+		ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
+		ssl_prefer_server_ciphers on;{{ end }}
+
+		{{if $path}}location /{{$path}}{{else}}location /{{end}} {
+			proxy_set_header X-Real-IP $remote_addr;
+			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+			proxy_set_header X-Forwarded-Proto $scheme;
+			proxy_set_header Host $http_host;
+			proxy_set_header X-NginX-Proxy true;
+
+			{{if $sslCrt }}proxy_redirect http:// https://;{{else}}proxy_redirect off;{{ end }}
+
+			{{if $websocket }}proxy_http_version 1.1;
+			proxy_set_header Upgrade $http_upgrade;
+			proxy_set_header Connection "upgrade";{{ end }}
+
+			proxy_pass http://{{$upstreamKey}}/;
+		}
+	}{{ end }}{{ end }}{{ end }}{{ end }}{{ end }}
+}

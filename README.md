@@ -67,8 +67,7 @@ your service
 	proxy_set_header Connection "upgrade";
 ```
 
-**nginx/sessionAffinity** = 1 | 0 [default 0] This enables nginx `ip_hash`
-option.
+**nginx/sessionAffinity** = "cookie" | "ip" This enables session affinity.
 
 **nginx/sslCrt** = The SSL certificate file for this service (must be located in /etc/nginx/ssl)
 
